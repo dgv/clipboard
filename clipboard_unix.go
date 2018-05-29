@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	xsel  = "xsel"
-	xclip = "xclip"
+	xsel      = "xsel"
+	xclip     = "xclip"
+	croshclip = "croshclip"
 )
 
 var (
@@ -27,6 +28,9 @@ var (
 
 	xclipPasteArgs = []string{xclip, "-out", "-selection", "clipboard"}
 	xclipCopyArgs  = []string{xclip, "-in", "-selection", "clipboard"}
+
+	croshclipPasteArgs = []string{croshclip, "-paste"}
+	croshclipCopyArgs  = []string{croshclip, "-copy"}
 
 	missingCommands = errors.New("No clipboard utilities available. Please install xsel or xclip.")
 )
@@ -43,6 +47,13 @@ func init() {
 	copyCmdArgs = xselCopyArgs
 
 	if _, err := exec.LookPath(xsel); err == nil {
+		return
+	}
+
+	pasteCmdArgs = croshclipPasteArgs
+	copyCmdArgs = croshclipCopyArgs
+
+	if _, err := exec.LookPath(croshclip); err == nil {
 		return
 	}
 
