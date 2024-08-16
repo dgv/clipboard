@@ -1,21 +1,22 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const win = @import("clipboard_windows.zig");
+const macos = @import("clipboard_macos.zig");
 const testing = std.testing;
 
 pub fn read() ![]const u8 {
     switch (builtin.os.tag) {
         .windows => return try win.read(),
-        //.macos => macos.read(),
+        .macos => return try macos.read(),
         //.unix => unix.read(),
         else => @compileError("platform not currently supported"),
     }
 }
 
-pub fn write(string: []const u8) !void {
+pub fn write(text: []const u8) !void {
     switch (builtin.os.tag) {
-        .windows => try win.write(string),
-        //.macos => macos.read(),
+        .windows => try win.write(text),
+        .macos => try macos.write(text),
         //.unix => unix.read(),
         else => @compileError("platform not currently supported"),
     }
