@@ -2,13 +2,14 @@ const std = @import("std");
 const builtin = @import("builtin");
 const win = @import("clipboard_windows.zig");
 const macos = @import("clipboard_macos.zig");
+const unix = @import("clipboard_unix.zig");
 const testing = std.testing;
 
 pub fn read() ![]const u8 {
     switch (builtin.os.tag) {
         .windows => return try win.read(),
         .macos => return try macos.read(),
-        //.unix => unix.read(),
+        .linux, .freebsd, .openbsd, .netbsd, .dragonfly => return try unix.read(),
         else => @compileError("platform not currently supported"),
     }
 }
@@ -17,7 +18,7 @@ pub fn write(text: []const u8) !void {
     switch (builtin.os.tag) {
         .windows => try win.write(text),
         .macos => try macos.write(text),
-        //.unix => unix.read(),
+        .linux, .freebsd, .openbsd, .netbsd, .dragonfly => try unix.write(text),
         else => @compileError("platform not currently supported"),
     }
 }
