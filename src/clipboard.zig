@@ -1,3 +1,4 @@
+/// Library clipboard read/write on clipboard
 const std = @import("std");
 const builtin = @import("builtin");
 const win = @import("clipboard_windows.zig");
@@ -5,6 +6,7 @@ const macos = @import("clipboard_macos.zig");
 const unix = @import("clipboard_unix.zig");
 const testing = std.testing;
 
+/// read string from clipboard
 pub fn read() ![]const u8 {
     switch (builtin.os.tag) {
         .windows => return try win.read(),
@@ -14,6 +16,7 @@ pub fn read() ![]const u8 {
     }
 }
 
+/// write string to clipboard
 pub fn write(text: []const u8) !void {
     switch (builtin.os.tag) {
         .windows => try win.write(text),
@@ -23,7 +26,7 @@ pub fn write(text: []const u8) !void {
     }
 }
 
-test "copy/paste" {
+test "utf8 copy/paste" {
     const text = "zig zag ⚡";
     try write(text);
     const r = try read();

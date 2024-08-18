@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
     const docs = b.addInstallDirectory(.{
         .source_dir = lib.getEmittedDocs(),
         .install_dir = .prefix,
-        .install_subdir = "docs",
+        .install_subdir = "../docs",
     });
     b.getInstallStep().dependOn(&docs.step);
     b.installArtifact(lib);

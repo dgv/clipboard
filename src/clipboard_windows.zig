@@ -13,7 +13,7 @@ pub extern "kernel32" fn GlobalLock(handle: windows.HANDLE) callconv(windows.WIN
 pub extern "kernel32" fn GlobalUnlock(handle: windows.HANDLE) callconv(windows.WINAPI) windows.BOOL;
 pub extern "kernel32" fn GlobalAlloc(flags: windows.UINT, size: windows.SIZE_T) callconv(windows.WINAPI) ?*anyopaque;
 pub extern "kernel32" fn GlobalFree(handle: windows.HANDLE) callconv(windows.WINAPI) windows.BOOL;
-pub extern "kernel32" fn lstrcpyW(str1: windows.LPWSTR, str2: windows.LPCWSTR) callconv(windows.WINAPI) ?*anyopaque;
+pub extern "kernel32" fn RtlMoveMemory(out: *anyopaque, in: *anyopaque, size: windows.SIZE_T) callconv(windows.WINAPI) void;
 
 fn open_clipboard() !void {
     if (IsClipboardFormatAvailable(cf_unicode_text) == 0) {
@@ -50,12 +50,12 @@ pub fn write(text: []const u8) !void {
         return error.EmptyClipboard;
     }
     const text_utf16 = try std.unicode.utf8ToUtf16LeAllocZ(std.heap.page_allocator, text);
-    const h_data = GlobalAlloc(gmem_moveable, text_utf16.len) orelse return error.GlobalAlloc;
+    const h_data = GlobalAlloc(gmem_moveable, text_utf16[0] * text_utf16.len) orelse return error.GlobalAlloc;
     const raw_data = GlobalLock(h_data) orelse return error.GlobalLock;
     defer _ = GlobalUnlock(h_data);
     const w_data: [*:0]u16 = @alignCast(@ptrCast(raw_data));
     const s_data = std.mem.span(w_data);
 
-    _ = lstrcpyW(s_data, text_utf16) orelse return error.lstrcpyW;
+    RtlMoveMemory(s_data.ptr, text_utf16.ptr, text_utf16[0] * text_utf16.len);
     _ = SetClipboardData(cf_unicode_text, h_data) orelse return error.SetClipboardData;
 }
