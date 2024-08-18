@@ -16,10 +16,6 @@ pub extern "kernel32" fn GlobalFree(handle: windows.HANDLE) callconv(windows.WIN
 pub extern "kernel32" fn RtlMoveMemory(out: *anyopaque, in: *anyopaque, size: windows.SIZE_T) callconv(windows.WINAPI) void;
 
 fn open_clipboard() !void {
-    if (IsClipboardFormatAvailable(cf_unicode_text) == 0) {
-        return error.UnicodeFormatUnavailable;
-    }
-
     const success = OpenClipboard(null);
     if (success == 0) {
         return error.OpenClipboard;
@@ -27,6 +23,9 @@ fn open_clipboard() !void {
 }
 
 pub fn read() ![]u8 {
+    if (IsClipboardFormatAvailable(cf_unicode_text) == 0) {
+        return error.UnicodeFormatUnavailable;
+    }
     try open_clipboard();
     defer _ = CloseClipboard();
 
