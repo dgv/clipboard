@@ -31,6 +31,6 @@ const std = @import("std");
 
 pub fn main() !void {
     try clipboard.write("Zig ⚡");
-    std.debug.print("{s}\n", clipboard.read() catch "");
+    std.debug.print("{s}\n", .{clipboard.read() catch ""});
 }
 ```
