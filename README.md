@@ -1,7 +1,8 @@
 # clipboard
 [![reference Zig](https://img.shields.io/badge/zig%20-0.13.0-orange)](https://github.com/dgv/clipboard/blob/main/build.zig.zon)
-[![reference Zig](https://img.shields.io/badge/zigdoc%20-pages-orange)](https://github.com/dgv/clipboard/blob/main/docs/)
+[![reference Zig](https://img.shields.io/badge/zigdoc%20-pages-orange)](https://dgv.dev.br/clipboard/)
 [![reference Zig](https://img.shields.io/badge/deps%20-0-green)](https://github.com/dgv/clipboard/blob/main/build.zig.zon)
+[![0 dependencies!](https://0dependencies.dev/0dependencies.svg)](https://0dependencies.dev)
 [![build](https://github.com/dgv/clipboard/actions/workflows/build.yml/badge.svg)](https://github.com/dgv/clipboard/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

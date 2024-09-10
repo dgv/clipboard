@@ -15,10 +15,11 @@ pub extern "kernel32" fn GlobalAlloc(flags: windows.UINT, size: windows.SIZE_T) 
 pub extern "kernel32" fn GlobalFree(handle: windows.HANDLE) callconv(windows.WINAPI) windows.BOOL;
 pub extern "kernel32" fn RtlMoveMemory(out: *anyopaque, in: *anyopaque, size: windows.SIZE_T) callconv(windows.WINAPI) void;
 
-fn open_clipboard() !void {
-    const success = OpenClipboard(null);
-    if (success == 0) {
-        return error.OpenClipboard;
+// wait clipboard be available; to-do implement timeout mechanism
+fn open_clipboard() void {
+    while (true) {
+        const success = OpenClipboard(null);
+        if (success == 0) continue else break;
     }
 }
 
@@ -26,7 +27,7 @@ pub fn read() ![]u8 {
     if (IsClipboardFormatAvailable(cf_unicode_text) == 0) {
         return error.UnicodeFormatUnavailable;
     }
-    try open_clipboard();
+    open_clipboard();
     defer _ = CloseClipboard();
 
     const h_data = GetClipboardData(cf_unicode_text) orelse return error.GetClipboardData;
@@ -42,7 +43,7 @@ pub fn read() ![]u8 {
 
 pub fn write(text: []const u8) !void {
     if (text.len == 0) return;
-    try open_clipboard();
+    open_clipboard();
     defer _ = CloseClipboard();
 
     const success = EmptyClipboard();
@@ -50,12 +51,12 @@ pub fn write(text: []const u8) !void {
         return error.EmptyClipboard;
     }
     const text_utf16 = try std.unicode.utf8ToUtf16LeAllocZ(std.heap.page_allocator, text);
-    const h_data = GlobalAlloc(gmem_moveable, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + 1) orelse return error.GlobalAlloc;
+    const h_data = GlobalAlloc(gmem_moveable, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + gmem_moveable) orelse return error.GlobalAlloc;
     const raw_data = GlobalLock(h_data) orelse return error.GlobalLock;
     defer _ = GlobalUnlock(h_data);
     const w_data: [*:0]u16 = @alignCast(@ptrCast(raw_data));
     const s_data = std.mem.span(w_data);
 
-    RtlMoveMemory(s_data.ptr, text_utf16.ptr, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + 1);
+    RtlMoveMemory(s_data.ptr, text_utf16.ptr, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + gmem_moveable);
     _ = SetClipboardData(cf_unicode_text, h_data) orelse return error.SetClipboardData;
 }
