@@ -32,3 +32,10 @@ test "utf8 copy/paste" {
     const r = try read();
     try std.testing.expect(std.mem.eql(u8, r, text));
 }
+
+test "write copy/paste" {
+    const text = "#" ** 1180;
+    try write(text);
+    const r = try read();
+    try std.testing.expect(std.mem.eql(u8, r, text));
+}

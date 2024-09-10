@@ -41,6 +41,7 @@ pub fn read() ![]u8 {
 }
 
 pub fn write(text: []const u8) !void {
+    if (text.len == 0) return;
     try open_clipboard();
     defer _ = CloseClipboard();
 
@@ -49,12 +50,12 @@ pub fn write(text: []const u8) !void {
         return error.EmptyClipboard;
     }
     const text_utf16 = try std.unicode.utf8ToUtf16LeAllocZ(std.heap.page_allocator, text);
-    const h_data = GlobalAlloc(gmem_moveable, text_utf16[0] * text_utf16.len) orelse return error.GlobalAlloc;
+    const h_data = GlobalAlloc(gmem_moveable, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + 1) orelse return error.GlobalAlloc;
     const raw_data = GlobalLock(h_data) orelse return error.GlobalLock;
     defer _ = GlobalUnlock(h_data);
     const w_data: [*:0]u16 = @alignCast(@ptrCast(raw_data));
     const s_data = std.mem.span(w_data);
 
-    RtlMoveMemory(s_data.ptr, text_utf16.ptr, text_utf16[0] * text_utf16.len);
+    RtlMoveMemory(s_data.ptr, text_utf16.ptr, @sizeOf(@TypeOf(text_utf16[0])) * text_utf16.len + 1);
     _ = SetClipboardData(cf_unicode_text, h_data) orelse return error.SetClipboardData;
 }
