@@ -2,8 +2,8 @@ const std = @import("std");
 
 const xsel: []const u8 = "xsel";
 const xclip: []const u8 = "xclip";
-const wlpaste: []const u8 = "wlpaste";
-const wlcopy: []const u8 = "wlcopy";
+const wlpaste: []const u8 = "wl-paste";
+const wlcopy: []const u8 = "wl-copy";
 
 const xsel_write = [_][]const u8{ xsel, "--input", "--clipboard" };
 const xsel_read = [_][]const u8{ xsel, "--output", "--clipboard" };
