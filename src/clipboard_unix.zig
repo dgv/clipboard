@@ -42,9 +42,9 @@ fn findProgramByNamePosix(name: []const u8, path: ?[]const u8, buf: []u8) ?[]con
 
 fn getCmd(t: op) ![]const []const u8 {
     const pathenv = std.process.getEnvVarOwned(std.heap.page_allocator, "PATH") catch "";
-    const wd = std.process.getEnvVarOwned(std.heap.page_allocator, "WAYLAND_DISPLAY") catch "";
-    if (!std.mem.eql(u8, wd, "")) {
-        return if (t == op.read) &wlpaste_read else &wlpaste_read;
+    const wd = std.process.getEnvVarOwned(std.heap.page_allocator, "XDG_SESSION_TYPE") catch "";
+    if (std.mem.eql(u8, wd, "wayland")) {
+        return if (t == op.read) &wlpaste_read else &wlcopy_write;
     }
     var buf: [255]u8 = undefined;
     var p = findProgramByNamePosix(xclip, pathenv, &buf);
