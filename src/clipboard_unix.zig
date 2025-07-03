@@ -2,8 +2,8 @@ const std = @import("std");
 
 const xsel: []const u8 = "xsel";
 const xclip: []const u8 = "xclip";
-const wlpaste: []const u8 = "wlpaste";
-const wlcopy: []const u8 = "wlcopy";
+const wlpaste: []const u8 = "wl-paste";
+const wlcopy: []const u8 = "wl-copy";
 
 const xsel_write = [_][]const u8{ xsel, "--input", "--clipboard" };
 const xsel_read = [_][]const u8{ xsel, "--output", "--clipboard" };
@@ -42,9 +42,9 @@ fn findProgramByNamePosix(name: []const u8, path: ?[]const u8, buf: []u8) ?[]con
 
 fn getCmd(t: op) ![]const []const u8 {
     const pathenv = std.process.getEnvVarOwned(std.heap.page_allocator, "PATH") catch "";
-    const wd = std.process.getEnvVarOwned(std.heap.page_allocator, "WAYLAND_DISPLAY") catch "";
-    if (!std.mem.eql(u8, wd, "")) {
-        return if (t == op.read) &wlpaste_read else &wlpaste_read;
+    const wd = std.process.getEnvVarOwned(std.heap.page_allocator, "XDG_SESSION_TYPE") catch "";
+    if (std.mem.eql(u8, wd, "wayland")) {
+        return if (t == op.read) &wlpaste_read else &wlcopy_write;
     }
     var buf: [255]u8 = undefined;
     var p = findProgramByNamePosix(xclip, pathenv, &buf);
