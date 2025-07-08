@@ -37,7 +37,7 @@ pub fn read() ![]u8 {
     const w_data: [*c]const u16 = @alignCast(@ptrCast(raw_data));
     const data = std.mem.span(w_data);
 
-    const text = try std.unicode.utf16leToUtf8Alloc(std.heap.page_allocator, data);
+    const text = try std.unicode.utf16LeToUtf8Alloc(std.heap.page_allocator, data);
     return std.mem.replaceOwned(u8, std.heap.page_allocator, text, "\r", "") catch "";
 }
 
