@@ -1,5 +1,5 @@
 # clipboard
-[![zig version](https://img.shields.io/badge/0.14.1-orange?style=flat&logo=zig&label=Zig&color=%23eba742)](https://ziglang.org/download/)
+[![zig version](https://img.shields.io/badge/0.15.1-orange?style=flat&logo=zig&label=Zig&color=%23eba742)](https://ziglang.org/download/)
 [![zig doc](https://img.shields.io/badge/zigdoc%20-pages-orange?color=%23eba742)](https://dgv.dev.br/clipboard/)
 [![reference Zig](https://img.shields.io/badge/deps%20-0-orange?color=%23eba742)](https://github.com/dgv/clipboard/blob/main/build.zig.zon)
 [![0 dependencies!](https://0dependencies.dev/0dependencies.svg)](https://0dependencies.dev)
@@ -18,6 +18,11 @@ Provide copying and pasting text (UTF-8) to the clipboard for Zig.
 ```
 zig fetch --save https://github.com/dgv/clipboard/archive/refs/heads/main.zip
 ```
+or specific version
+```
+zig fetch --save "git+https://github.com/dgv/clipboard?ref=v0.14.1"
+```
+
 #### import (build.zig)
 ```zig
 ...
