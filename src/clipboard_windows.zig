@@ -3,17 +3,17 @@ const windows = std.os.windows;
 const cf_unicode_text: windows.UINT = 13;
 const gmem_moveable: windows.UINT = 0x0002;
 
-pub extern "user32" fn OpenClipboard(hwnd: ?windows.HWND) callconv(windows.WINAPI) windows.BOOL;
-pub extern "user32" fn CloseClipboard() callconv(windows.WINAPI) windows.BOOL;
-pub extern "user32" fn EmptyClipboard() callconv(windows.WINAPI) windows.BOOL;
-pub extern "user32" fn IsClipboardFormatAvailable(format: windows.UINT) callconv(windows.WINAPI) windows.BOOL;
-pub extern "user32" fn GetClipboardData(format: windows.UINT) callconv(windows.WINAPI) ?windows.HANDLE;
-pub extern "user32" fn SetClipboardData(format: windows.UINT, handle: windows.HANDLE) callconv(windows.WINAPI) ?windows.HANDLE;
-pub extern "kernel32" fn GlobalLock(handle: windows.HANDLE) callconv(windows.WINAPI) ?*anyopaque;
-pub extern "kernel32" fn GlobalUnlock(handle: windows.HANDLE) callconv(windows.WINAPI) windows.BOOL;
-pub extern "kernel32" fn GlobalAlloc(flags: windows.UINT, size: windows.SIZE_T) callconv(windows.WINAPI) ?*anyopaque;
-pub extern "kernel32" fn GlobalFree(handle: windows.HANDLE) callconv(windows.WINAPI) windows.BOOL;
-pub extern "kernel32" fn RtlMoveMemory(out: *anyopaque, in: *anyopaque, size: windows.SIZE_T) callconv(windows.WINAPI) void;
+pub extern "user32" fn OpenClipboard(hwnd: ?windows.HWND) callconv(.winapi) windows.BOOL;
+pub extern "user32" fn CloseClipboard() callconv(.winapi) windows.BOOL;
+pub extern "user32" fn EmptyClipboard() callconv(.winapi) windows.BOOL;
+pub extern "user32" fn IsClipboardFormatAvailable(format: windows.UINT) callconv(.winapi) windows.BOOL;
+pub extern "user32" fn GetClipboardData(format: windows.UINT) callconv(.winapi) ?windows.HANDLE;
+pub extern "user32" fn SetClipboardData(format: windows.UINT, handle: windows.HANDLE) callconv(.winapi) ?windows.HANDLE;
+pub extern "kernel32" fn GlobalLock(handle: windows.HANDLE) callconv(.winapi) ?*anyopaque;
+pub extern "kernel32" fn GlobalUnlock(handle: windows.HANDLE) callconv(.winapi) windows.BOOL;
+pub extern "kernel32" fn GlobalAlloc(flags: windows.UINT, size: windows.SIZE_T) callconv(.winapi) ?*anyopaque;
+pub extern "kernel32" fn GlobalFree(handle: windows.HANDLE) callconv(.winapi) windows.BOOL;
+pub extern "kernel32" fn RtlMoveMemory(out: *anyopaque, in: *anyopaque, size: windows.SIZE_T) callconv(.winapi) void;
 
 // wait clipboard be available; to-do implement timeout mechanism
 fn open_clipboard() void {
