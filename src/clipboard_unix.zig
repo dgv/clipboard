@@ -1,4 +1,7 @@
+/// Linux/BSD clipboard via xclip, xsel, or wl-clipboard.
+
 const std = @import("std");
+const io_helper = @import("clipboard.zig");
 
 const xsel: []const u8 = "xsel";
 const xclip: []const u8 = "xclip";
@@ -17,70 +20,46 @@ const op = enum {
     write,
 };
 
-fn canExecutePosix(path: []const u8) bool {
-    std.posix.access(path, std.posix.X_OK) catch return false;
-    return true;
-}
-
-fn findProgramByNamePosix(name: []const u8, path: ?[]const u8, buf: []u8) ?[]const u8 {
-    if (std.mem.indexOfScalar(u8, name, '/') != null) {
-        @memcpy(buf[0..name.len], name);
-        return buf[0..name.len];
-    }
-    const path_env = path orelse return null;
-    var fib = std.heap.FixedBufferAllocator.init(buf);
-
-    var it = std.mem.tokenizeScalar(u8, path_env, std.fs.path.delimiter_posix);
-    while (it.next()) |path_dir| {
-        defer fib.reset();
-        const full_path = std.fs.path.join(fib.allocator(), &.{ path_dir, name }) catch continue;
-        if (canExecutePosix(full_path)) return full_path;
-    }
-
-    return null;
-}
-
+/// Pick the clipboard command based on the desktop environment.
+/// Prefers Wayland (wl-clipboard), then X11 (xclip), then fallback (xsel).
 fn getCmd(t: op) ![]const []const u8 {
-    const pathenv = std.process.getEnvVarOwned(std.heap.page_allocator, "PATH") catch "";
-    const wd = std.process.getEnvVarOwned(std.heap.page_allocator, "XDG_SESSION_TYPE") catch "";
-    if (std.mem.eql(u8, wd, "wayland")) {
+    if (std.c.getenv("WAYLAND_DISPLAY")) |_| {
         return if (t == op.read) &wlpaste_read else &wlcopy_write;
     }
-    var buf: [255]u8 = undefined;
-    var p = findProgramByNamePosix(xclip, pathenv, &buf);
-    if (p != null) {
+    if (std.c.getenv("DISPLAY")) |_| {
         return if (t == op.read) &xclip_read else &xclip_write;
     }
-    p = findProgramByNamePosix(xsel, pathenv, &buf);
-    if (p != null) {
-        return if (t == op.read) &xsel_read else &xsel_write;
-    }
-    return error.ClipboardCmdNotFound;
+    return if (t == op.read) &xsel_read else &xsel_write;
 }
 
+/// Read plain text from the system clipboard.
+/// Caller owns the returned memory (freed with `std.heap.smp_allocator`).
 pub fn read() ![]u8 {
     const cmd = try getCmd(.read);
-    const result = try std.process.Child.run(.{
-        .allocator = std.heap.page_allocator,
+    const io = io_helper.get();
+    const result = try std.process.run(std.heap.smp_allocator, io, .{
         .argv = cmd,
     });
     return result.stdout;
 }
 
+/// Write plain text to the system clipboard.
 pub fn write(text: []const u8) !void {
     const cmd = try getCmd(.write);
-    var proc = std.process.Child.init(
-        cmd,
-        std.heap.page_allocator,
-    );
-    proc.stdin_behavior = .Pipe;
-    proc.stdout_behavior = .Ignore;
-    proc.stderr_behavior = .Ignore;
+    const io = io_helper.get();
 
-    try proc.spawn();
-    try proc.stdin.?.writeAll(text);
-    proc.stdin.?.close();
-    proc.stdin = null;
-    const term = proc.wait() catch unreachable;
-    if (term != .Exited or term.Exited != 0) unreachable;
+    var child = try std.process.spawn(io, .{
+        .argv = cmd,
+        .stdin = .pipe,
+        .stdout = .ignore,
+        .stderr = .ignore,
+    });
+    defer child.kill(io);
+
+    try std.Io.File.writeStreamingAll(child.stdin.?, io, text);
+    child.stdin.?.close(io);
+    child.stdin = null;
+
+    const term = try child.wait(io);
+    if (term != .exited or term.exited != 0) return error.ClipboardCmdFailed;
 }

@@ -1,31 +1,37 @@
+/// macOS clipboard via pbpaste/pbcopy.
+
 const std = @import("std");
+const io_helper = @import("clipboard.zig");
 
 const read_cmd = "pbpaste";
 const write_cmd = "pbcopy";
 
+/// Read plain text from the system clipboard.
+/// Caller owns the returned memory (freed with `std.heap.smp_allocator`).
 pub fn read() ![]u8 {
-    const result = try std.process.Child.run(.{
-        .allocator = std.heap.page_allocator,
-        .argv = &[_][]const u8{
-            read_cmd,
-        },
+    const io = io_helper.get();
+    const result = try std.process.run(std.heap.smp_allocator, io, .{
+        .argv = &[_][]const u8{read_cmd},
     });
     return result.stdout;
 }
 
+/// Write plain text to the system clipboard.
 pub fn write(text: []const u8) !void {
-    var proc = std.process.Child.init(
-        &[_][]const u8{write_cmd},
-        std.heap.page_allocator,
-    );
-    proc.stdin_behavior = .Pipe;
-    proc.stdout_behavior = .Ignore;
-    proc.stderr_behavior = .Ignore;
+    const io = io_helper.get();
 
-    try proc.spawn();
-    try proc.stdin.?.writeAll(text);
-    proc.stdin.?.close();
-    proc.stdin = null;
-    const term = proc.wait() catch unreachable;
-    if (term != .Exited or term.Exited != 0) unreachable;
+    var child = try std.process.spawn(io, .{
+        .argv = &[_][]const u8{write_cmd},
+        .stdin = .pipe,
+        .stdout = .ignore,
+        .stderr = .ignore,
+    });
+    defer child.kill(io);
+
+    try std.Io.File.writeStreamingAll(child.stdin.?, io, text);
+    child.stdin.?.close(io);
+    child.stdin = null;
+
+    const term = try child.wait(io);
+    if (term != .exited or term.exited != 0) unreachable;
 }
